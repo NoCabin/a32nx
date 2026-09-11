@@ -857,6 +857,7 @@ export class MfdFmsPerf extends FmsPage<MfdFmsPerfProps> {
     this.noiseSpeed.set(pd?.noiseSpeed ? pd.noiseSpeed.get() : null);
     this.noiseEnabled.set(pd?.noiseEnabled?.get() ?? false);
     this.climbDerated.set(pd?.climbDerated ? pd.climbDerated.get() : null);
+    SimVar.SetSimVarValue('L:A32NX_CLIMB_DERATE', 'Number', pd?.climbDerated?.get() ?? 0);
     this.descentCabinRate.set(pd?.descentCabinRate ? pd.descentCabinRate.get() : null);
     this.climbPreselectedSpeed.set(pd?.preselectedClimbSpeed ? pd.preselectedClimbSpeed.get() : null);
     this.cruisePreselectedSpeed.set(pd?.preselectedCruiseSpeed ? pd.preselectedCruiseSpeed.get() : null);
@@ -2108,13 +2109,14 @@ export class MfdFmsPerf extends FmsPage<MfdFmsPerfProps> {
                       values={ArraySubject.create(['NONE', 'DERATE 01', 'DERATE 02', 'DERATE 03'])}
                       inactive={this.clbPageInactive}
                       selectedIndex={this.climbDerated as Subscribable<ClimbDerated>}
-                      onModified={(v) =>
+                      onModified={(v) => {
                         this.props.flightPlanInterface.setPerformanceData(
                           'climbDerated',
                           v,
                           this.loadedFlightPlanIndex.get(),
-                        )
-                      }
+                        );
+                        SimVar.SetSimVarValue('L:A32NX_CLIMB_DERATE', 'Number', v ?? 0);
+                      }}
                       idPrefix={`${this.props.mfd.uiService.captOrFo}_MFD_deratedClbDropdown`}
                       freeTextAllowed={false}
                       containerStyle="width: 250px;"
