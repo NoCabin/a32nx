@@ -12,6 +12,10 @@
 #include "configuration.h"
 #include "display.h"
 
+#ifdef A380X
+#include "../localterrain/terrainmap.h"
+#endif
+
 namespace navigationdisplay {
 
 /**
@@ -70,6 +74,14 @@ class Collection {
 
   // outputs
   std::shared_ptr<simconnect::ClientDataArea<types::AircraftStatusData>> _simconnectAircraftStatus;
+
+#ifdef A380X
+  // Shared by both ND displays so the terrain.map catalog/tile cache is only ever held once. Lazily loaded on
+  // first use of renderDisplay() rather than in the constructor, since a WASM module is constructed well
+  // before PANEL_SERVICE_PRE_DRAW is guaranteed to be reachable.
+  std::shared_ptr<localterrain::TerrainMap> _terrainMap;
+  bool _terrainMapLoadAttempted = false;
+#endif
 
  public:
   /**

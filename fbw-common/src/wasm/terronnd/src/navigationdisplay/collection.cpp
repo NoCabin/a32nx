@@ -197,8 +197,35 @@ void Collection::updateDisplay(FsContext context) {
 void Collection::renderDisplay(sGaugeDrawData* pDraw, FsContext context) {
   // render the display
   const auto displayIterator = this->_displays.find(context);
-  if (displayIterator != this->_displays.cend()) {
-    const auto display = displayIterator->second;
-    display->render(pDraw);
+  if (displayIterator == this->_displays.cend()) {
+    return;
   }
+  const auto display = displayIterator->second;
+
+#ifdef A380X
+  if (!this->_terrainMapLoadAttempted) {
+    this->_terrainMapLoadAttempted = true;
+    this->_terrainMap = std::shared_ptr<localterrain::TerrainMap>(new localterrain::TerrainMap());
+    this->_terrainMap->load("\\work\\terrain\\terrain.map");
+  }
+
+  navigationdisplay::LocalRenderInputs localInputs;
+  localInputs.simTimeSeconds = pDraw->t;
+  localInputs.aircraftPositionValid = this->_egpwcData.presentLatitude.isNo() && this->_egpwcData.presentLongitude.isNo() &&
+                                       this->_egpwcData.altitude.isNo() && this->_egpwcData.heading.isNo();
+  localInputs.aircraftLatitude      = this->_egpwcData.presentLatitude.value().convert(types::degree);
+  localInputs.aircraftLongitude     = this->_egpwcData.presentLongitude.value().convert(types::degree);
+  localInputs.headingDeg            = this->_egpwcData.heading.value().convert(types::degree);
+  localInputs.altitudeFt            = this->_egpwcData.altitude.value().convert(types::feet);
+  localInputs.verticalSpeedFtMin    = this->_egpwcData.verticalSpeed.value().convert(types::ftpmin);
+  localInputs.gearIsDown            = this->_egpwcData.gearIsDown;
+  localInputs.destinationValid = this->_egpwcData.destinationLatitude.isNo() && this->_egpwcData.destinationLongitude.isNo();
+  localInputs.destinationLatitude  = this->_egpwcData.destinationLatitude.value().convert(types::degree);
+  localInputs.destinationLongitude = this->_egpwcData.destinationLongitude.value().convert(types::degree);
+  localInputs.terrainMap           = this->_terrainMap;
+
+  display->render(pDraw, localInputs);
+#else
+  display->render(pDraw);
+#endif
 }

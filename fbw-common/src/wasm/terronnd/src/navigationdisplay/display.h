@@ -11,6 +11,7 @@
 #include <cstdint>
 #include <cstring>
 #include <iostream>
+#include <memory>
 #include <string_view>
 #include <vector>
 
@@ -26,7 +27,38 @@
 #include "../types/simbridge.h"
 #include "configuration.h"
 
+#ifdef A380X
+#include "../localterrain/ndrenderer.h"
+#include "../localterrain/terrainmap.h"
+#endif
+
 namespace navigationdisplay {
+
+#ifdef A380X
+/**
+ * @brief Live aircraft/EFIS state Collection gathers each frame, handed to DisplayBase::render() so it can
+ * drive LocalNdRenderer when SimBridge has stopped sending frames. See DisplayBase::render() for the
+ * SimBridge-connectivity watchdog itself.
+ */
+struct LocalRenderInputs {
+  double simTimeSeconds = 0.0;
+
+  bool aircraftPositionValid = false;
+  double aircraftLatitude = 0.0;
+  double aircraftLongitude = 0.0;
+  double headingDeg = 0.0;
+  double altitudeFt = 0.0;
+  double verticalSpeedFtMin = 0.0;
+  bool gearIsDown = false;
+
+  bool destinationValid = false;
+  double destinationLatitude = 0.0;
+  double destinationLongitude = 0.0;
+
+  // shared across both displays -- loaded lazily on first use, see Collection
+  std::shared_ptr<localterrain::TerrainMap> terrainMap;
+};
+#endif
 
 /**
  * @brief Defines the different display sides
@@ -56,7 +88,16 @@ class DisplayBase {
 
   DisplaySide side() const;
   void destroy();
+#ifdef A380X
+  void render(sGaugeDrawData* pDrawData, const LocalRenderInputs& localInputs);
+#else
   void render(sGaugeDrawData* pDrawData);
+#endif
+
+#ifdef A380X
+  // Implemented by Display<> below, where the NdMinElevation/... LVar template parameters live.
+  virtual void writeLocalThresholds(const localterrain::NdFrameResult& frame) = 0;
+#endif
 
  protected:
   DisplaySide _side;
@@ -67,9 +108,26 @@ class DisplayBase {
   std::shared_ptr<simconnect::ClientDataArea<types::ThresholdData>> _thresholds;
   std::shared_ptr<simconnect::ClientDataAreaBuffered<std::uint8_t, SIMCONNECT_CLIENTDATA_MAX_SIZE>> _frameData;
 
+#ifdef A380X
+  // The frameData/thresholds SimConnect callbacks (Display<>'s constructor below) just set this flag --
+  // they run during connection.readData(), before render() runs in the same PRE_DRAW tick, so render() can
+  // safely consume-and-clear it once per frame rather than needing a raw timestamp inside the callback.
+  bool _simBridgeSignalPending = false;
+  bool _everSawSimBridgeSignal = false;
+  double _secondsSinceLastSimBridgeSignal = 0.0;
+  bool _localModeActive = false;
+  localterrain::LocalNdRenderer _localRenderer;
+
+  static constexpr double kSimBridgeTimeoutSeconds = 3.0;
+
+  void updateSimBridgeWatchdog(double dt);
+  void renderLocal(sGaugeDrawData* pDrawData, const LocalRenderInputs& localInputs);
+#endif
+
   DisplayBase(DisplaySide side, FsContext context);
 
   void destroyImage();
+  void drawCurrentImage(sGaugeDrawData* pDrawData);
 
   static constexpr std::size_t MaxFrameByteCount = 4 * 1024 * 1024;
   static constexpr std::uint32_t MaxFrameDimension = 4096;
@@ -122,6 +180,11 @@ class Display : public DisplayBase {
     this->_frameData->defineArea(side == DisplaySide::Left ? FrameDataLeftName : FrameDataRightName);
     this->_frameData->requestArea(SIMCONNECT_CLIENT_DATA_PERIOD_ON_SET);
     this->_frameData->setOnChangeCallback([=]() {
+#ifdef A380X
+      this->_simBridgeSignalPending = true;
+      this->_localModeActive = false;
+      this->_localRenderer.reset();
+#endif
       if (!this->_ignoreNextFrame && (this->_configuration.terrOnNd || this->_configuration.terrOnVd)) {
         if (this->_nanovgImage == 0) {
           // If we don't have an image yet, create one
@@ -173,6 +236,11 @@ class Display : public DisplayBase {
     this->_thresholds->requestArea(SIMCONNECT_CLIENT_DATA_PERIOD_ON_SET);
     this->_thresholds->setAlwaysChanges(true);
     this->_thresholds->setOnChangeCallback([=]() {
+#ifdef A380X
+      this->_simBridgeSignalPending = true;
+      this->_localModeActive = false;
+      this->_localRenderer.reset();
+#endif
       const std::uint32_t frameByteCount = this->_thresholds->data().frameByteCount;
       if (frameByteCount == 0 || frameByteCount > DisplayBase::MaxFrameByteCount) {
         // corrupted or incompatible packet: allocating this size could kill the module
@@ -222,6 +290,16 @@ class Display : public DisplayBase {
       this->_ignoreNextFrame = true;
     }
   }
+
+#ifdef A380X
+  void writeLocalThresholds(const localterrain::NdFrameResult& frame) override {
+    this->_ndThresholdData->template value<NdMinElevation>() = static_cast<std::int16_t>(frame.minimumElevationFt);
+    this->_ndThresholdData->template value<NdMinElevationMode>() = static_cast<std::uint8_t>(frame.minimumElevationMode);
+    this->_ndThresholdData->template value<NdMaxElevation>() = static_cast<std::int16_t>(frame.maximumElevationFt);
+    this->_ndThresholdData->template value<NdMaxElevationMode>() = static_cast<std::uint8_t>(frame.maximumElevationMode);
+    this->_ndThresholdData->writeValues();
+  }
+#endif
 };
 
 /**
