@@ -157,6 +157,7 @@ class FlyByWireInterface {
   double simulationTimeReady = 0.0;
   std::unique_ptr<LocalVariable> idIsReady;
   std::unique_ptr<LocalVariable> idStartState;
+  std::unique_ptr<LocalVariable> idIsGp7000;
 
   std::unique_ptr<LocalVariable> idLeftWingWheelSpeed_rpm;
   std::unique_ptr<LocalVariable> idRightWingWheelSpeed_rpm;

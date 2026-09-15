@@ -294,6 +294,9 @@ class SystemsHost extends BaseInstrument {
   public connectedCallback(): void {
     super.connectedCallback();
 
+    const title = SimVar.GetSimVarValue('TITLE', 'string');
+    SimVar.SetSimVarValue('L:A32NX_ENGINE_IS_GP7000', SimVarValueType.Bool, title.includes('GP7000'));
+
     // Needed to fetch METARs from the sim
     RegisterViewListener(
       'JS_LISTENER_FACILITY',

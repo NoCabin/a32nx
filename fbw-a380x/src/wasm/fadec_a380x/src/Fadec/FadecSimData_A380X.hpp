@@ -216,9 +216,10 @@ class FadecSimData_A380X {
   NamedVariablePtr engineFuelUsed[4];   // kg
   NamedVariablePtr engineIdleEGT;       // Celsius
   NamedVariablePtr engineIdleFF;
-  NamedVariablePtr engineIdleN1;  // Percent
-  NamedVariablePtr engineIdleN3;  // Percent
-  NamedVariablePtr engineN1[4];   // Percent
+  NamedVariablePtr engineIdleN1;    // Percent
+  NamedVariablePtr engineIdleN3;    // Percent
+  NamedVariablePtr engineIsGp7000;  // Bool - set by SystemsHost.ts from the aircraft TITLE
+  NamedVariablePtr engineN1[4];     // Percent
   NamedVariablePtr engineN2[4];   // Percent
   NamedVariablePtr engineN3[4];   // Percent
   NamedVariablePtr engineOilTotal[4];
@@ -356,9 +357,10 @@ class FadecSimData_A380X {
     // TODO: consider DataDefinition for the groups tha are read/write each tick
     startState = dm->make_named_var("A32NX_START_STATE", UNITS.Number, NO_AUTO_UPDATE);
 
-    engineIdleN1  = dm->make_named_var("A32NX_ENGINE_IDLE_N1", UNITS.Number, AUTO_READ_WRITE);
-    engineIdleN3  = dm->make_named_var("A32NX_ENGINE_IDLE_N3", UNITS.Number, AUTO_READ_WRITE);
-    engineIdleEGT = dm->make_named_var("A32NX_ENGINE_IDLE_EGT", UNITS.Number, AUTO_READ_WRITE);
+    engineIdleN1   = dm->make_named_var("A32NX_ENGINE_IDLE_N1", UNITS.Number, AUTO_READ_WRITE);
+    engineIdleN3   = dm->make_named_var("A32NX_ENGINE_IDLE_N3", UNITS.Number, AUTO_READ_WRITE);
+    engineIdleEGT  = dm->make_named_var("A32NX_ENGINE_IDLE_EGT", UNITS.Number, AUTO_READ_WRITE);
+    engineIsGp7000 = dm->make_named_var("A32NX_ENGINE_IS_GP7000", UNITS.Number, AUTO_READ);
     engineIdleFF  = dm->make_named_var("A32NX_ENGINE_IDLE_FF", UNITS.Number, AUTO_READ_WRITE);
 
     engineState[E1] = dm->make_named_var("A32NX_ENGINE_STATE:1", UNITS.Number, AUTO_READ_WRITE);

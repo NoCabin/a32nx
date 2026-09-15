@@ -42,6 +42,10 @@ class EngineControl_A380X {
 
   bool fadecInitialized = false;
 
+  // Set once at init from L:A32NX_ENGINE_IS_GP7000. GP7000 is a real 2-spool engine (N1/N2 only,
+  // no N3) vs. the Trent 900's 3-spool model faked from the sim's native N1/N2.
+  bool isGp7000 = false;
+
   // Fuel configuration for loading and storing fuel levels
   FuelConfiguration_A380X fuelConfiguration{};
 

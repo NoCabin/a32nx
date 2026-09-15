@@ -23,6 +23,8 @@ const EngineColumn: FC<Position & EngineNumber & IgnitionActive & EngineColumnPr
 }) => {
   const [N2] = useSimVar(`L:A32NX_ENGINE_N2:${engine}`, 'number', 100); // TODO: Update with correct SimVars
   const [N3] = useSimVar(`L:A32NX_ENGINE_N3:${engine}`, 'number', 100); // TODO: Update with correct SimVars
+  const [isGp7000] = useSimVar('L:A32NX_ENGINE_IS_GP7000', 'number', 1000);
+  const hasN3 = !isGp7000;
   const [starterValveOpen] = useSimVar(`L:A32NX_PNEU_ENG_${engine}_STARTER_VALVE_OPEN`, 'number', 500); // TODO: Update with correct SimVars
   const starting = !!(N2 < 58.5 && ignition && starterValveOpen); // TODO Should be N3
   const [fadecManuallyPowered] = useSimVar(`L:A32NX_OVHD_FADEC_${engine}`, 'bool', 500);
@@ -48,9 +50,13 @@ const EngineColumn: FC<Position & EngineNumber & IgnitionActive & EngineColumnPr
       <DecimalValues x={x} y={y} value={N2} active={fadecPowered} />
       <path className="White SW2" d={`M${engine > 2 ? x - 96 : x + 64},${y - 10} l 26, 0`} />
       {/* N3 */}
-      <rect x={x - 55} y={y + 10} width={98} height={34} className={`LightGreyBox ${starting ? 'Show' : 'Hide'}`} />
-      <DecimalValues x={x} y={y + 38} value={N3} active={fadecPowered} />
-      <path className="White SW2" d={`M${engine > 2 ? x - 96 : x + 64},${y + 28} l 26, 0`} />
+      {hasN3 && (
+        <>
+          <rect x={x - 55} y={y + 10} width={98} height={34} className={`LightGreyBox ${starting ? 'Show' : 'Hide'}`} />
+          <DecimalValues x={x} y={y + 38} value={N3} active={fadecPowered} />
+          <path className="White SW2" d={`M${engine > 2 ? x - 96 : x + 64},${y + 28} l 26, 0`} />
+        </>
+      )}
       {/* Fuel Flow */}
       {!fadecPowered && (
         <text x={x} y={y + 86} className="Amber F29 MiddleAlign">
@@ -85,8 +91,12 @@ const EngineColumn: FC<Position & EngineNumber & IgnitionActive & EngineColumnPr
       <DecimalValues x={x} y={y + 416} value={n2Vibration} active={fadecPowered} shift={-14} />
       <path className="White SW2" d={`M${engine > 2 ? x - 96 : x + 64},${y + 406} l 26, 0`} />
       {/* VIB N3 */}
-      <DecimalValues x={x} y={y + 450} value={n3Vibration} active={fadecPowered} shift={-14} />
-      <path className="White SW2" d={`M${engine > 2 ? x - 96 : x + 64},${y + 440} l 26, 0`} />
+      {hasN3 && (
+        <>
+          <DecimalValues x={x} y={y + 450} value={n3Vibration} active={fadecPowered} shift={-14} />
+          <path className="White SW2" d={`M${engine > 2 ? x - 96 : x + 64},${y + 440} l 26, 0`} />
+        </>
+      )}
 
       {/* NAC / Ignition */}
       {(starting || ignition) && <StartValve x={x} y={y + 536} engine={engine} />}

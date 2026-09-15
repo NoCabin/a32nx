@@ -239,6 +239,7 @@ struct athr_data
   real_T OAT_degC;
   real_T ISA_degC;
   real_T ambient_density_kg_per_m3;
+  boolean_T is_gp7000;
 };
 
 #endif

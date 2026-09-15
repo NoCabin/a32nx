@@ -10,6 +10,8 @@ export const EngPage = () => {
   // const sdacDatum = true;
   const [useMetric] = usePersistentSetting('CONFIG_USING_METRIC_UNIT');
   const [engSelectorPosition] = useSimVar('L:XMLVAR_ENG_MODE_SEL', 'Enum', 1000);
+  const [isGp7000] = useSimVar('L:A32NX_ENGINE_IS_GP7000', 'number', 1000);
+  const hasN3 = !isGp7000;
   const [engine1State] = useSimVar('L:A32NX_ENGINE_STATE:1', 'enum', 500); // TODO: Update with correct SimVars
   const [engine2State] = useSimVar('L:A32NX_ENGINE_STATE:2', 'enum', 500); // TODO: Update with correct SimVars
   const [engine3State] = useSimVar('L:A32NX_ENGINE_STATE:3', 'enum', 500); // TODO: Update with correct SimVars
@@ -63,12 +65,16 @@ export const EngPage = () => {
       <text x={414} y={68} className="F25 EndAlign Cyan">
         %
       </text>
-      <text x={388} y={108} className="F25 EndAlign White">
-        N3
-      </text>
-      <text x={414} y={108} className="F25 EndAlign Cyan">
-        %
-      </text>
+      {hasN3 && (
+        <>
+          <text x={388} y={108} className="F25 EndAlign White">
+            N3
+          </text>
+          <text x={414} y={108} className="F25 EndAlign Cyan">
+            %
+          </text>
+        </>
+      )}
       <text x={388} y={148} className="F25 EndAlign White">
         FF
       </text>
@@ -99,9 +105,11 @@ export const EngPage = () => {
       <text x={428} y={486} className="F25 EndAlign White">
         N2
       </text>
-      <text x={428} y={520} className="F25 EndAlign White">
-        N3
-      </text>
+      {hasN3 && (
+        <text x={428} y={520} className="F25 EndAlign White">
+          N3
+        </text>
+      )}
     </>
   );
 };

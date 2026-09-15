@@ -52,7 +52,13 @@ export class MfdFmsDataStatus extends FmsPage<MfdFmsDataStatusProps> {
   private readonly deleteStoredElementsDisabled = Subject.create(true);
   private readonly isSwapConfirmVisible = Subject.create(false);
 
+  private readonly powerplantText = Subject.create('A380-800 / TRENT 972');
+
   protected onNewData() {
+    this.powerplantText.set(
+      SimVar.GetSimVarValue('L:A32NX_ENGINE_IS_GP7000', 'number') ? 'A380-800 / GP7270' : 'A380-800 / TRENT 972',
+    );
+
     NavigationDatabaseService.activeDatabase.getDatabaseIdent().then((dbCycle) => {
       const navCycleDates = dbCycle === null ? '' : MfdFmsDataStatus.calculateActiveDate(dbCycle);
       const navSerial =
@@ -124,7 +130,7 @@ export class MfdFmsDataStatus extends FmsPage<MfdFmsDataStatusProps> {
           >
             <TopTabNavigatorPage containerStyle="height: 735px;">
               {/* ACFT STATUS */}
-              <div class="mfd-data-status-airframe-label mfd-value bigger">A380-800&nbsp;/&nbsp;TRENT 972</div>
+              <div class="mfd-data-status-airframe-label mfd-value bigger">{this.powerplantText}</div>
               <div class="mfd-data-status-performance-row" style="width:655px; margin-bottom: 10px;">
                 <span class="mfd-label bigger" style="margin-right: 25px;">
                   IDLE

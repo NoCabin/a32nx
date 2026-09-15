@@ -285,6 +285,7 @@ void FlyByWireInterface::setupLocalVariables() {
   // regsiter L variable for init state and ready signal
   idIsReady = std::make_unique<LocalVariable>("A32NX_IS_READY");
   idStartState = std::make_unique<LocalVariable>("A32NX_START_STATE");
+  idIsGp7000 = std::make_unique<LocalVariable>("A32NX_ENGINE_IS_GP7000");
 
   // regsiter L variable for logging
   idLoggingFlightControlsEnabled = std::make_unique<LocalVariable>("A32NX_LOGGING_FLIGHT_CONTROLS_ENABLED");
@@ -2968,6 +2969,7 @@ bool FlyByWireInterface::updateFadec(double sampleTime, int fadecIndex) {
   fadecInputs[fadecIndex].in.data.engine_N1_percent = engine_N1_percent;
   fadecInputs[fadecIndex].in.data.TAT_degC = simData.total_air_temperature_celsius;
   fadecInputs[fadecIndex].in.data.OAT_degC = simData.ambient_temperature_celsius;
+  fadecInputs[fadecIndex].in.data.is_gp7000 = idIsGp7000->get() > 0.5;
 
   fadecInputs[fadecIndex].in.input.ATHR_disconnect =
       simConnectInterface.getSimInputThrottles().ATHR_disconnect || idAutothrustDisconnect->get() == 1;

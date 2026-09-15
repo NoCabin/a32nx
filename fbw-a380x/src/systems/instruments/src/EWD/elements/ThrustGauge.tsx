@@ -190,9 +190,10 @@ export class ThrustGauge extends DisplayComponent<ThrustGaugeProps> {
   );
 
   // FIXME replace with actual available thrust when ACUTE is implemented
+
   private readonly maxThrustAvail = MappedSubject.create(
     ([cas, thrustLimitIdle, thrustLimitMax, thrIdleOffset]) =>
-      cas < 35
+      cas < 35 && !SimVar.GetSimVarValue('L:A32NX_ENGINE_IS_GP7000', 'number')
         ? Math.max(
             thrIdleOffset * 100,
             ThrustGauge.thrustPercentFromN1(METOTS_N1_LIMIT, thrustLimitIdle, thrustLimitMax, thrIdleOffset),
